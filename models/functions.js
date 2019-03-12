@@ -3,8 +3,8 @@ function add(acc, item) {
 }
 
 function analyseTime(time) {
-    const ms = time % 100;
-    time = Math.floor(time / 100);
+    const ms = time % 1000;
+    time = Math.floor(time / 1000);
     const sec = time % 60;
     time = Math.floor(time / 60);
     const min = time % 60;

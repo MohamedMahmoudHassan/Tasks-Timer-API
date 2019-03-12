@@ -57,4 +57,18 @@ router.get('/totalTime/:name', async (req, res) => {
     }
 });
 
+router.get('/reset/:name', async (req, res) => {
+    const task = await Task.findOne({ name: `${req.params.name}` });
+
+    if (!task) {
+        const tasksList = await Task.find().select('name -_id');
+        res.status(400).send(`There is no such task.\n${tasksList}`);
+    } else{
+        
+        task.previous = [];        
+        const result = await task.save();
+        res.send(result);
+    }
+});
+
 module.exports = router;
