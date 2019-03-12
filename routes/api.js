@@ -16,7 +16,7 @@ router.post('/new', async (req, res) => {
     res.send(task);
 });
 
-router.get('/start/:name', async (req, res) => {
+router.get('/startTask/:name', async (req, res) => {
     bodyDebugger(req.params.name);
     const task = await Task.findOne({ name: `${req.params.name}` });
 
@@ -35,5 +35,15 @@ router.get('/start/:name', async (req, res) => {
     }
 });
 
+router.get('/endTask', async (req, res) => {
+    const task = await getRunningTask();
+    if (!task) return res.status(400).send('There is no running tasks.');
+    
+    task.previous.push(Date.now() - task.cur);
+    task.cur = -1;
+
+    const result = await task.save();
+    res.send(result);
+});
 
 module.exports = router;
