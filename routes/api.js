@@ -16,4 +16,23 @@ router.post('/new', async (req, res) => {
     res.send(task);
 });
 
+router.get('/start/:name', async (req, res) => {
+    bodyDebugger(req.params.name);
+    const task = await Task.findOne({ name: `${req.params.name}` });
+
+    if (!task) {
+        const tasksList = await Task.find().select('name -_id');
+        res.status(400).send(`There is no such task.\n${tasksList}`);
+    }
+    else{
+        const running = await Task.findOne({ cur: { $gt: 0 } });
+        if (running) res.status(400).send(`Your already started ${running.name}`);
+        else {
+            task.cur = Date.now();
+            const result = await task.save();
+            res.send(result);
+        }
+    }
+});
+
 module.exports = router;
