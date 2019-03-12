@@ -21,6 +21,12 @@ async function createNewTask(body) {
     return result;
 }
 
+async function getRunningTask(){
+    const result = Task.findOne({ cur: { $gt: 0 } });
+    return result;
+}
+
 module.exports.validate = validate;
 module.exports.Task = Task;
 module.exports.createNewTask = createNewTask;
+module.exports.getRunningTask = getRunningTask;

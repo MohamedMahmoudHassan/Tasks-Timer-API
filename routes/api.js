@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyDebugger = require('debug')('app:body');
-const { validate, Task, createNewTask } = require('../models/tasks');
+const { validate, Task, createNewTask, getRunningTask } = require('../models/tasks');
 
 const router = express.Router();
 
@@ -25,7 +25,7 @@ router.get('/start/:name', async (req, res) => {
         res.status(400).send(`There is no such task.\n${tasksList}`);
     }
     else{
-        const running = await Task.findOne({ cur: { $gt: 0 } });
+        const running = await getRunningTask();
         if (running) res.status(400).send(`Your already started ${running.name}`);
         else {
             task.cur = Date.now();
@@ -34,5 +34,6 @@ router.get('/start/:name', async (req, res) => {
         }
     }
 });
+
 
 module.exports = router;
