@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyDebugger = require('debug')('app:body');
 const { validate, Task, createNewTask, getRunningTask } = require('../models/tasks');
+const { add, analyseTime } = require('../models/functions.js');
 
 const router = express.Router();
 
@@ -17,21 +18,18 @@ router.post('/new', async (req, res) => {
 });
 
 router.get('/startTask/:name', async (req, res) => {
-    bodyDebugger(req.params.name);
     const task = await Task.findOne({ name: `${req.params.name}` });
 
     if (!task) {
         const tasksList = await Task.find().select('name -_id');
         res.status(400).send(`There is no such task.\n${tasksList}`);
-    }
-    else{
+    } else{
         const running = await getRunningTask();
-        if (running) res.status(400).send(`Your already started ${running.name}`);
-        else {
-            task.cur = Date.now();
-            const result = await task.save();
-            res.send(result);
-        }
+        if (running) return res.status(400).send(`Your already started ${running.name}`);
+
+        task.cur = Date.now();
+        const result = await task.save();
+        res.send(result);
     }
 });
 
@@ -44,6 +42,19 @@ router.get('/endTask', async (req, res) => {
 
     const result = await task.save();
     res.send(result);
+});
+
+router.get('/totalTime/:name', async (req, res) => {
+    const task = await Task.findOne({ name: `${req.params.name}` });
+
+    if (!task) {
+        const tasksList = await Task.find().select('name -_id');
+        res.status(400).send(`There is no such task.\n${tasksList}`);
+    } else{
+        const time = task.previous.reduce(add);
+
+        res.send({ task, TotalTime: analyseTime(time) });
+    }
 });
 
 module.exports = router;
