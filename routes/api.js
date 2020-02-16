@@ -9,6 +9,11 @@ const {
 
 const router = express.Router();
 
+router.get("/tasksList", async(req, res) => {
+  const tasks = await Task.find({});
+  return res.send(tasks);
+})
+
 router.post("/newTask", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -28,6 +33,7 @@ router.get("/startSession/:name", async (req, res) => {
     const tasksList = await Task.find().select("name -_id");
     return res.status(400).send(`There is no such task.\n${tasksList}`);
   }
+
   const running = await getRunningTask();
   if (running)
     return res.status(400).send(`Your already started ${running.name}`);
