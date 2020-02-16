@@ -1,74 +1,73 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const bodyDebugger = require('debug')('app:body');
-const { validate, Task, createNewTask, getRunningTask } = require('../models/tasks');
-const { add, analyseTime } = require('../models/functions.js');
+const express = require("express");
+const bodyDebugger = require("debug")("app:body");
+const {
+  validate,
+  Task,
+  createNewTask,
+  getRunningTask
+} = require("../models/tasks");
 
 const router = express.Router();
 
-router.post('/new', async (req, res) => {
-    const { error } = validate(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+router.post("/new", async (req, res) => {
+  const { error } = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
 
-    const alreadyExists = await Task.findOne({ name: req.body.name });
-    if (alreadyExists) return res.status(400).send(`${req.body.name} exists already.`);
+  const alreadyExists = await Task.findOne({ name: req.body.name });
+  if (alreadyExists)
+    return res.status(400).send(`${req.body.name} exists already.`);
 
-    const task = await createNewTask(req.body);
-    res.send(task);
+  const task = await createNewTask(req.body);
+  res.send(task);
 });
 
-router.get('/startTask/:name', async (req, res) => {
-    const task = await Task.findOne({ name: `${req.params.name}` });
+router.get("/startSession/:name", async (req, res) => {
+  const task = await Task.findOne({ name: `${req.params.name}` });
 
-    if (!task) {
-        const tasksList = await Task.find().select('name -_id');
-        res.status(400).send(`There is no such task.\n${tasksList}`);
-    } else{
-        const running = await getRunningTask();
-        if (running) return res.status(400).send(`Your already started ${running.name}`);
+  if (!task) {
+    const tasksList = await Task.find().select("name -_id");
+    return res.status(400).send(`There is no such task.\n${tasksList}`);
+  }
+  const running = await getRunningTask();
+  if (running)
+    return res.status(400).send(`Your already started ${running.name}`);
 
-        task.cur = Date.now();
-        const result = await task.save();
-        res.send(result);
-    }
+  task.runningSessionStart = Date.now();
+  const result = await task.save();
+  res.send(result);
 });
 
-router.get('/endTask', async (req, res) => {
-    const task = await getRunningTask();
-    if (!task) return res.status(400).send('There is no running tasks.');
-    
-    task.previous.push(Date.now() - task.cur);
-    task.cur = -1;
+router.get("/endSession", async (req, res) => {
+  const task = await getRunningTask();
+  if (!task) return res.status(400).send("There is no running tasks.");
 
-    const result = await task.save();
-    res.send(result);
+  task.previous.push(Date.now() - task.runningSessionStart);
+  task.runningSessionStart = -1;
+
+  const result = await task.save();
+  res.send(result);
 });
 
-router.get('/totalTime/:name', async (req, res) => {
-    const task = await Task.findOne({ name: `${req.params.name}` });
+router.get("/taskDetails/:name", async (req, res) => {
+  const task = await Task.findOne({ name: `${req.params.name}` });
 
-    if (!task) {
-        const tasksList = await Task.find().select('name -_id');
-        res.status(400).send(`There is no such task.\n${tasksList}`);
-    } else{
-        const time = task.previous.reduce(add);
-
-        res.send({ task, TotalTime: analyseTime(time) });
-    }
+  if (!task) {
+    const tasksList = await Task.find().select("name -_id");
+    res.status(400).send(`There is no such task.\n${tasksList}`);
+  }
+  res.send(task);
 });
 
-router.get('/reset/:name', async (req, res) => {
-    const task = await Task.findOne({ name: `${req.params.name}` });
+router.get("/reset/:name", async (req, res) => {
+  const task = await Task.findOne({ name: `${req.params.name}` });
 
-    if (!task) {
-        const tasksList = await Task.find().select('name -_id');
-        res.status(400).send(`There is no such task.\n${tasksList}`);
-    } else{
-        
-        task.previous = [];        
-        const result = await task.save();
-        res.send(result);
-    }
+  if (!task) {
+    const tasksList = await Task.find().select("name -_id");
+    res.status(400).send(`There is no such task.\n${tasksList}`);
+  }
+  task.previous = [];
+  const result = await task.save();
+  res.send(result);
 });
 
 module.exports = router;
