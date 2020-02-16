@@ -1,29 +1,33 @@
-const mongoose = require('mongoose');
-const Joi = require('joi');
+const mongoose = require("mongoose");
+const Joi = require("joi");
+const _ = require("lodash");
 
 function validate(body) {
-    const Schema = {
-        name: Joi.string().required(),
-    };
+  const Schema = {
+    name: Joi.string().required()
+  };
 
-    return Joi.validate(body, Schema);
+  return Joi.validate(body, Schema);
 }
 
-const Task = mongoose.model('Tasks', new mongoose.Schema({
+const Task = mongoose.model(
+  "Tasks",
+  new mongoose.Schema({
     name: { type: String, required: true },
-    previous: [{ type: Number }],
-    cur: { type: Number },
-}));
+    sessionsDuration: [{ type: Number }],
+    runningSessionStart: { type: Number }
+  })
+);
 
 async function createNewTask(body) {
-    const task = new Task(body);
-    const result = await task.save();
-    return result;
+  const task = new Task(_.pick(body, ["name"]));
+  const result = await task.save();
+  return result;
 }
 
-async function getRunningTask(){
-    const result = Task.findOne({ cur: { $gt: 0 } });
-    return result;
+async function getRunningTask() {
+  const result = Task.findOne({ runningSessionStart: { $gt: 0 } });
+  return result;
 }
 
 module.exports.validate = validate;
