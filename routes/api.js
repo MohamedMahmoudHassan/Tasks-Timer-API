@@ -9,10 +9,10 @@ const {
 
 const router = express.Router();
 
-router.get("/tasksList", async(req, res) => {
+router.get("/tasksList", async (req, res) => {
   const tasks = await Task.find({});
   return res.send(tasks);
-})
+});
 
 router.post("/newTask", async (req, res) => {
   const { error } = validate(req.body);
@@ -23,6 +23,17 @@ router.post("/newTask", async (req, res) => {
     return res.status(400).send(`${req.body.name} exists already.`);
 
   const task = await createNewTask(req.body);
+  res.send(task);
+});
+
+router.delete("/deleteTask/:name", async (req, res) => {
+  const task = await Task.findOneAndDelete({ name: `${req.params.name}` });
+
+  if (!task) {
+    const tasksList = await Task.find().select("name -_id");
+    return res.status(400).send(`There is no such task.\n${tasksList}`);
+  }
+
   res.send(task);
 });
 
