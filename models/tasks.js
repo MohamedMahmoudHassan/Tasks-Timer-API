@@ -22,7 +22,7 @@ const Task = mongoose.model(
 async function createNewTask(body) {
   const task = new Task(_.pick(body, ["name"]));
   task.sessionsDuration = [];
-  task.runningSessionStart = -1;
+  task.runningSessionStart = 0;
   const result = await task.save();
   return result;
 }

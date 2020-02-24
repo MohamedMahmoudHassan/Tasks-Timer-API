@@ -20,7 +20,7 @@ router.post("/newTask", async (req, res) => {
 
   const alreadyExists = await Task.findOne({ name: req.body.name });
   if (alreadyExists)
-    return res.status(400).send(`${req.body.name} exists already.`);
+    return res.status(400).send(`${req.body.name} already exists.`);
 
   const task = await createNewTask(req.body);
   res.send(task);
@@ -58,8 +58,8 @@ router.get("/endSession", async (req, res) => {
   const task = await getRunningTask();
   if (!task) return res.status(400).send("There is no running tasks.");
 
-  task.previous.push(Date.now() - task.runningSessionStart);
-  task.runningSessionStart = -1;
+  task.sessionsDuration.push(Date.now() - task.runningSessionStart);
+  task.runningSessionStart = 0;
 
   const result = await task.save();
   res.send(result);

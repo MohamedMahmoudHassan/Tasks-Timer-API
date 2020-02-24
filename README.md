@@ -23,7 +23,7 @@ Now you should be ready to run the project.
 ### Start the Server
 
 ```
-node index.js
+node start
 ```
 
 This will launch the Node server on port 5000. You can change the port by setting environment variable with `$env:port=` before starting the server.
